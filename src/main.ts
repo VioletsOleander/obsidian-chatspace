@@ -19,7 +19,7 @@ class ChatView extends Plugin {
 
   /** Load settings from `data.json` or default values. */
   async loadSettings() {
-    // Later source overwite earlier ones
+    // Later source overwrite earlier ones
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 

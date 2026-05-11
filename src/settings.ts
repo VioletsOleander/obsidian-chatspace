@@ -77,9 +77,9 @@ class ChatViewSettingTab extends PluginSettingTab {
    * Populate the element with plugin setting value and add a save on modification watcher for it.
    *
    * @param containerEl The container element to hold the text setting
-   * @param name Name of the text setting
-   * @param desc Description of the text setting
-   * @param key Key name of the text setting
+   * @param name Name of the secret setting
+   * @param desc Description of the secret setting
+   * @param key Key name of the secret setting
    */
   private addSecretSetting(
     containerEl: HTMLElement,
