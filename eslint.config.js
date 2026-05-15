@@ -16,12 +16,7 @@ const config = defineConfig([
       globals: { ...globals.browser },
       parser: tseslint.parser,
       parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            "build.js",
-            "eslint.config.js",
-          ],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -32,7 +27,6 @@ const config = defineConfig([
     "main.js",
     "build.js",
     "eslint.config.js",
-    "tsconfig.json",
   ]),
 ]);
 
