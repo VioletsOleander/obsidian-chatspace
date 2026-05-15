@@ -5,7 +5,7 @@ repos:
         name: Check Format
         entry: dprint check
         language: system
-        types_or: [ts, json, yaml]
+        types_or: [ts, json, yaml, markdown, svelte]
       - id: check-lint
         name: Check Lint
         entry: npm x oxlint
