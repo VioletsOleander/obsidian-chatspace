@@ -6,8 +6,13 @@ repos:
         entry: dprint check --allow-no-files
         language: system
         types_or: [ts, javascript, json, yaml, markdown, svelte]
-      - id: check-lint
-        name: Check Lint
+      - id: lint
+        name: Lint
         entry: npm x eslint
         language: system
         types: [ts]
+      - id: lint-svelte
+        name: Lint Svelte
+        entry: npm x svelte-check
+        language: system
+        types: [svelte]
