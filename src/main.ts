@@ -1,38 +1,52 @@
-import type { ChatSpaceSetting } from "./setting";
 import { Plugin, WorkspaceLeaf } from "obsidian";
+import type { ChatSpaceSetting } from "./setting";
 import { ChatSpaceSettingTab, DEFAULT_SETTING } from "./setting";
-import { ChatView } from "./view";
+import { ChatView } from "./view/chat";
 
 class ChatSpace extends Plugin {
-  settings: ChatSpaceSetting;
+  setting!: ChatSpaceSetting;
 
-  async onload(): Promise<void> {
-    console.log("Loading ChatSpace plugin");
+  /** Initialize the plugin.
+   *
+   * The initialization involves:
+   * - load setting
+   * - register command
+   */
+  override async onload(): Promise<void> {
+    console.debug("Loading ChatSpace plugin");
 
     await this.loadSettings();
     this.addSettingTab(new ChatSpaceSettingTab(this.app, this));
 
     this.registerView(ChatView.viewType, (leaf) => new ChatView(leaf));
-    this.addRibbonIcon("dice", "Activate chat view", () => {
-      this.activateView(ChatView.viewType);
+    this.addCommand({
+      id: "toggle-chat",
+      name: "Toggle chat",
+      callback: () => {
+        this.activateView(ChatView.viewType).catch(() => {
+          console.debug("Failed to activate view");
+        });
+      },
     });
   }
 
-  async onunload(): Promise<void> {
-    console.log("Unloading ChatSpace plugin");
-
-    this.app.workspace.detachLeavesOfType(ChatView.viewType);
+  override onunload(): void {
+    console.debug("Unloading ChatSpace plugin");
   }
 
   /** Save settings to `data.json`. */
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+    await this.saveData(this.setting);
   }
 
-  /** Load `this.settings` from `data.json` or default values. */
+  /** Load `this.setting` from `data.json` or default values. */
   private async loadSettings(): Promise<void> {
     // Later source overwrite earlier ones
-    this.settings = Object.assign({}, DEFAULT_SETTING, await this.loadData());
+    const loadedSetting = (await this.loadData()) as Partial<ChatSpaceSetting>;
+    this.setting = {
+      ...DEFAULT_SETTING,
+      ...loadedSetting,
+    };
   }
 
   /** Reveal existing view or create a new one. */
@@ -49,7 +63,7 @@ class ChatSpace extends Plugin {
       leaf = firstLeaf;
     }
 
-    workspace.revealLeaf(leaf);
+    await workspace.revealLeaf(leaf);
   }
 }
 

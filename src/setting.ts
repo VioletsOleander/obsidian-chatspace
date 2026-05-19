@@ -52,7 +52,7 @@ class ChatSpaceSettingTab extends PluginSettingTab {
   /** Create and return an async updater for the setting identified by `key`. */
   private makeUpdater(key: keyof ChatSpaceSetting): settingUpdater {
     return async (value: string): Promise<void> => {
-      this.plugin.settings[key] = value;
+      this.plugin.setting[key] = value;
       await this.plugin.saveSettings();
     };
   }
@@ -76,7 +76,7 @@ class ChatSpaceSettingTab extends PluginSettingTab {
     const setting = this.makeSetting(container, name, desc);
     const makeComponent = (element: HTMLElement): SecretComponent => {
       const component = new SecretComponent(this.app, element);
-      return component.setValue(this.plugin.settings[key]).onChange(this.makeUpdater(key));
+      return component.setValue(this.plugin.setting[key]).onChange(this.makeUpdater(key));
     };
 
     setting.addComponent(makeComponent);
@@ -100,7 +100,7 @@ class ChatSpaceSettingTab extends PluginSettingTab {
   ): void {
     const setting = this.makeSetting(container, name, desc);
     const onAddText = (component: TextComponent): void => {
-      component.setValue(this.plugin.settings[key]).onChange(this.makeUpdater(key));
+      component.setValue(this.plugin.setting[key]).onChange(this.makeUpdater(key));
     };
 
     setting.addText(onAddText);
