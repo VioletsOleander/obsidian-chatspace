@@ -39,7 +39,7 @@ class ChatSpace extends Plugin {
     await this.saveData(this.setting);
   }
 
-  /** Load `this.settings` from `data.json` or default values. */
+  /** Load `this.setting` from `data.json` or default values. */
   private async loadSettings(): Promise<void> {
     // Later source overwrite earlier ones
     const loadedSetting = (await this.loadData()) as Partial<ChatSpaceSetting>;

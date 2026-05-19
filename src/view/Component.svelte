@@ -84,7 +84,7 @@ onMount(() => {
       bind:value={inputMessage}
       onkeydown={handleKeydown}
     ></textarea>
-    <button class="send-button" onclick={() => sendMessage}>
+    <button class="send-button" onclick={sendMessage}>
       Send
     </button>
   </div>
