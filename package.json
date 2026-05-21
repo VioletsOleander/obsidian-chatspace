@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "obsidian": "latest",
-    "openai": "^6.37.0"
+    "openai": "^6.38.0"
   },
   "devDependencies": {
     "@eslint/js": "9.30.1",

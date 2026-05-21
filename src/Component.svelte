@@ -1,76 +1,95 @@
 <script lang="ts">
+import { Notice, type SecretStorage } from "obsidian";
+import Client from "openai";
 import { onMount } from "svelte";
+import type { Setting } from "./setting";
+
+type Request = Client.Responses.ResponseCreateParamsStreaming;
+
+interface Props {
+  setting: Setting;
+  secretStorage: SecretStorage;
+}
+
+let { setting, secretStorage }: Props = $props();
+let client = $derived.by(() => {
+  return new Client({
+    apiKey: secretStorage.getSecret(setting.apiKey),
+    baseURL: setting.baseURL,
+    dangerouslyAllowBrowser: true,
+  });
+});
+let prevResponseId: string | undefined;
 
 let messages: string[] = $state([]);
+let userQuery = $state("");
+let textArea: HTMLTextAreaElement | undefined = $state();
 
-/// Functions for textarea
-
-let inputMessage = $state("");
-
-/** Update message box list with input message. */
-function sendMessage(): void {
-  if (inputMessage.trim() != "") {
-    messages.push(inputMessage);
-    inputMessage = "";
+async function sendMessage(): Promise<void> {
+  if (userQuery.trim() === "") {
+    new Notice("Can not send empty message");
+    return;
   }
-}
 
-/** Send message on enter key down. */
-function handleKeydown(event: KeyboardEvent): void {
-  if (event.key == "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
+  const responseIdx = messages.push(userQuery);
+
+  let request: Request = {
+    model: setting.modelName,
+    input: userQuery,
+    stream: true,
+  };
+  if (prevResponseId != undefined) {
+    request["previous_response_id"] = prevResponseId;
   }
-}
 
-/// Functions for message box
+  userQuery = "";
 
-let copiedMessageIdx: number | undefined = $state(undefined);
-
-/** Copy message indexed by `messageIdx` to clipboard.
- *
- * Update `copiedMessageIdx` to `messageIdx` if successful.
- */
-async function copyToClipboard(messageIdx: number): Promise<void> {
+  const stream = await client.responses.create(request);
   try {
-    const msg = messages[messageIdx];
-
-    if (msg != undefined) {
-      await navigator.clipboard.writeText(msg);
-
-      copiedMessageIdx = messageIdx;
-      setTimeout(() => {
-        copiedMessageIdx = undefined;
-      }, 2000);
-    } else {
-      console.warn(`Index ${messageIdx} is out of bound.`);
+    for await (const event of stream) {
+      if (event.type === "response.output_text.delta") {
+        if (messages[responseIdx] === undefined) {
+          messages.push(event.delta);
+        } else {
+          messages[responseIdx] += event.delta;
+        }
+      } else if (event.type === "response.completed") {
+        prevResponseId = event.response.id;
+      }
     }
   } catch (err) {
-    console.error("Failed to copy message:", err);
+    new Notice("Faild to get response");
   }
 }
 
-/// Register events
-let textareaElement: HTMLTextAreaElement | undefined = $state(undefined);
+/** Copy `text` to clipboard. */
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    new Notice("Copied message");
+  } catch (err) {
+    new Notice("Failed to copy message");
+  }
+}
 
 // Focus on load
 onMount(() => {
-  if (textareaElement != undefined) {
-    textareaElement.focus();
+  if (textArea != undefined) {
+    textArea.focus();
   }
 });
 </script>
 
 <div class="chat-component">
   <div class="message-box-list">
-    {#each messages as msg, idx}
+    {#each messages as msg}
       <div class="message-box">
         <p class="message">{msg}</p>
         <button
           class="copy-button"
-          onclick={() => copyToClipboard(idx)}
+          onclick={() => copyText(msg)}
         >
-          {copiedMessageIdx == idx ? "Copied" : "Copy"}
+          Copy
         </button>
       </div>
     {/each}
@@ -80,9 +99,14 @@ onMount(() => {
     <textarea
       class="input-textarea"
       placeholder="Enter your prompt here..."
-      bind:this={textareaElement}
-      bind:value={inputMessage}
-      onkeydown={handleKeydown}
+      bind:this={textArea}
+      bind:value={userQuery}
+      onkeydown={(event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      }}
     ></textarea>
     <button class="send-button" onclick={sendMessage}>
       Send
