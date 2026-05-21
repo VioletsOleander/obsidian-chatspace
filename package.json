@@ -17,6 +17,7 @@
     "svelte-check": "svelte-check"
   },
   "dependencies": {
+    "dprint": "^0.54.0",
     "obsidian": "latest",
     "openai": "^6.38.0"
   },
