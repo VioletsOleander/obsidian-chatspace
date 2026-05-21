@@ -1,10 +1,19 @@
-import { ItemView } from "obsidian";
+import { ItemView, SecretStorage, type WorkspaceLeaf } from "obsidian";
 import { mount, unmount } from "svelte";
 import Component from "./Component.svelte";
+import type { Setting } from "./setting";
 
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
+  private setting: Setting;
+  private secretStorage: SecretStorage;
   private component: ReturnType<typeof mount> | undefined;
+
+  constructor(leaf: WorkspaceLeaf, setting: Setting, secretStorage: SecretStorage) {
+    super(leaf);
+    this.setting = setting;
+    this.secretStorage = secretStorage;
+  }
 
   /** Return the unique identifier of the view. */
   getViewType(): string {
@@ -26,6 +35,7 @@ class ChatView extends ItemView {
 
     this.component = mount(Component, {
       target: container,
+      props: { setting: this.setting, secretStorage: this.secretStorage },
     });
   }
 

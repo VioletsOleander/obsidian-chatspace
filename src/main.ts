@@ -1,10 +1,9 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
-import type { ChatSpaceSetting } from "./setting";
-import { ChatSpaceSettingTab, DEFAULT_SETTING } from "./setting";
-import { ChatView } from "./view/chat";
+import { DEFAULT_SETTING, type Setting, SettingTab } from "./setting";
+import { ChatView } from "./view";
 
 class ChatSpace extends Plugin {
-  setting!: ChatSpaceSetting;
+  setting!: Setting;
 
   /** Initialize the plugin.
    *
@@ -14,11 +13,12 @@ class ChatSpace extends Plugin {
    */
   override async onload(): Promise<void> {
     console.debug("Loading ChatSpace plugin");
-
     await this.loadSettings();
-    this.addSettingTab(new ChatSpaceSettingTab(this.app, this));
 
-    this.registerView(ChatView.viewType, (leaf) => new ChatView(leaf));
+    this.addSettingTab(new SettingTab(this.app, this));
+
+    this.registerView(ChatView.viewType, (leaf) => new ChatView(leaf, this.setting, this.app.secretStorage));
+
     this.addCommand({
       id: "toggle-chat",
       name: "Toggle chat",
@@ -42,7 +42,7 @@ class ChatSpace extends Plugin {
   /** Load `this.setting` from `data.json` or default values. */
   private async loadSettings(): Promise<void> {
     // Later source overwrite earlier ones
-    const loadedSetting = (await this.loadData()) as Partial<ChatSpaceSetting>;
+    const loadedSetting = (await this.loadData()) as Partial<Setting>;
     this.setting = {
       ...DEFAULT_SETTING,
       ...loadedSetting,
