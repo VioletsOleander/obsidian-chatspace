@@ -32,7 +32,7 @@ type Request = Client.Responses.ResponseCreateParamsStreaming;
 
 async function send(): Promise<void> {
   if (inputContent.trim() === "") {
-    new Notice("Can not send empty content");
+    new Notice("Cannot send empty content");
     return;
   }
 
