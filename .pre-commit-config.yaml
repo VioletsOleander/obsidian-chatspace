@@ -3,16 +3,16 @@ repos:
     hooks:
       - id: check-format
         name: Check Format
-        entry: dprint check --allow-no-files
+        entry: npx dprint check --allow-no-files
         language: system
         types_or: [ts, javascript, json, yaml, markdown, svelte]
       - id: lint
         name: Lint
-        entry: npm x eslint
+        entry: npx eslint
         language: system
         types: [ts]
       - id: lint-svelte
         name: Lint Svelte
-        entry: npm x svelte-check
+        entry: npx svelte-check
         language: system
         types: [svelte]
