@@ -1,10 +1,8 @@
 <script lang="ts">
-import { Notice, type SecretStorage } from "obsidian";
+import { Notice, type SecretStorage, setIcon } from "obsidian";
 import Client from "openai";
 import { onMount } from "svelte";
 import type { Setting } from "./setting";
-
-type Request = Client.Responses.ResponseCreateParamsStreaming;
 
 interface Props {
   setting: Setting;
@@ -12,6 +10,7 @@ interface Props {
 }
 
 let { setting, secretStorage }: Props = $props();
+
 let client = $derived.by(() => {
   return new Client({
     apiKey: secretStorage.getSecret(setting.apiKey),
@@ -19,39 +18,46 @@ let client = $derived.by(() => {
     dangerouslyAllowBrowser: true,
   });
 });
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+let messages: Message[] = $state([]);
+let inputContent = $state("");
 let prevResponseId: string | undefined;
 
-let messages: string[] = $state([]);
-let userQuery = $state("");
-let textArea: HTMLTextAreaElement | undefined = $state();
+type Request = Client.Responses.ResponseCreateParamsStreaming;
 
-async function sendMessage(): Promise<void> {
-  if (userQuery.trim() === "") {
-    new Notice("Can not send empty message");
+async function send(): Promise<void> {
+  if (inputContent.trim() === "") {
+    new Notice("Cannot send empty content");
     return;
   }
 
-  const responseIdx = messages.push(userQuery);
+  const message: Message = { role: "user", content: inputContent };
+  const responseIdx = messages.push(message);
 
   let request: Request = {
     model: setting.modelName,
-    input: userQuery,
+    input: inputContent,
     stream: true,
   };
   if (prevResponseId != undefined) {
     request["previous_response_id"] = prevResponseId;
   }
 
-  userQuery = "";
+  inputContent = "";
 
   const stream = await client.responses.create(request);
   try {
     for await (const event of stream) {
       if (event.type === "response.output_text.delta") {
         if (messages[responseIdx] === undefined) {
-          messages.push(event.delta);
+          messages.push({ role: "assistant", content: event.delta });
         } else {
-          messages[responseIdx] += event.delta;
+          messages[responseIdx].content += event.delta;
         }
       } else if (event.type === "response.completed") {
         prevResponseId = event.response.id;
@@ -73,6 +79,7 @@ async function copyText(text: string): Promise<void> {
 }
 
 // Focus on load
+let textArea: HTMLTextAreaElement | undefined = $state();
 onMount(() => {
   if (textArea != undefined) {
     textArea.focus();
@@ -84,10 +91,20 @@ onMount(() => {
   <div class="message-box-list">
     {#each messages as msg}
       <div class="message-box">
-        <p class="message">{msg}</p>
+        <span
+          class="message-icon"
+          {@attach (node: HTMLElement) => {
+            if (msg.role === "user") {
+              setIcon(node, "user-round");
+            } else {
+              setIcon(node, "bot");
+            }
+          }}
+        ></span>
+        <p class="message-content">{msg.content}</p>
         <button
           class="copy-button"
-          onclick={() => copyText(msg)}
+          onclick={() => copyText(msg.content)}
         >
           Copy
         </button>
@@ -100,15 +117,24 @@ onMount(() => {
       class="input-textarea"
       placeholder="Enter your prompt here..."
       bind:this={textArea}
-      bind:value={userQuery}
+      bind:value={inputContent}
       onkeydown={(event) => {
         if (event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
-          sendMessage();
+          send();
         }
       }}
     ></textarea>
-    <button class="send-button" onclick={sendMessage}>
+    <button
+      class="newchat-button"
+      onclick={() => {
+        prevResponseId = undefined;
+        messages.length = 0;
+      }}
+    >
+      New Chat
+    </button>
+    <button class="send-button" onclick={send}>
       Send
     </button>
   </div>
@@ -125,12 +151,13 @@ onMount(() => {
   width: 100%;
 
   font-size: var(--font-text-size);
-  font-family: var(--font-interface);
+  font-family: var(--font-text-theme);
   background-color: var(--background-primary);
 }
 
 .message-box-list {
   /* Properties for serving as a container element */ 
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: auto;
@@ -141,33 +168,44 @@ onMount(() => {
 
 .message-box {
   /* Properties for serving as a container element */ 
+  display: inline-flex;
+  flex-direction: row;
+
   position: relative;
   border-radius: 4px;
-  border: 0.5px solid var(--background-secondary);
+  border: 1px solid var(--background-secondary);
 
-  padding: 4px;
+  padding: 16px;
   background-color: var(--background-secondary);
 
   /* Properties for serving as a contained element */
   margin: 4px;
 }
 
-.message {
-  margin: 1.5px;
-  height: 100%;
-  width: 100%;
+.message-icon {
+  flex: 2;
 
+  --icon-size: 24px;
+}
+
+.message-content {
+  flex: 70;
+  margin: 1.5px;
   white-space: pre-wrap;
+
+  user-select: text;
+}
+
+.newchat-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
 .copy-button {
   position: absolute;
   bottom: 10px;
   right: 10px;
-}
-
-.copy-button:hover {
-  background-color: var(--interactive-hover);
 }
 
 .input-box {
@@ -198,9 +236,5 @@ onMount(() => {
   position: absolute;
   bottom: 10px;
   right: 10px;
-}
-
-.send-button:hover {
-  background-color: var(--interactive-hover);
 }
 </style>

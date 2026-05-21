@@ -13,6 +13,7 @@ class ChatView extends ItemView {
     super(leaf);
     this.setting = setting;
     this.secretStorage = secretStorage;
+    this.icon = "message-square";
   }
 
   /** Return the unique identifier of the view. */
