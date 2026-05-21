@@ -58,7 +58,7 @@ async function sendMessage(): Promise<void> {
       }
     }
   } catch (err) {
-    new Notice("Faild to get response");
+    new Notice("Failed to get response");
   }
 }
 
