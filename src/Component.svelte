@@ -17,12 +17,10 @@ interface Exchange {
 
 let textArea!: HTMLTextAreaElement;
 
-let { setting, secretStorage }: Props = $props();
-
-let currentChatId: number = 0;
 let prevResponseId: string | null = null;
 let exchanges: Exchange[] = $state([]);
 
+let { setting, secretStorage }: Props = $props();
 let client = $derived.by(() => {
   return new OpenAI({
     apiKey: secretStorage.getSecret(setting.apiKey),
@@ -31,13 +29,14 @@ let client = $derived.by(() => {
   });
 });
 
+let waiting = $state(false);
+let controller = new AbortController();
+
 async function send(): Promise<void> {
   if (textArea.value.trim() === "") {
     new Notice("Cannot send empty content");
     return;
   }
-
-  const chatId = currentChatId;
 
   const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
     model: setting.modelName,
@@ -48,14 +47,14 @@ async function send(): Promise<void> {
   exchanges.push({ query: textArea.value, reply: "" });
   textArea.value = "";
 
-  const stream = await client.responses.create(request);
+  const stream = await client.responses.create(request, {
+    signal: controller.signal,
+  });
 
   try {
-    for await (const event of stream) {
-      if (chatId !== currentChatId) {
-        break;
-      }
+    waiting = true;
 
+    for await (const event of stream) {
       switch (event.type) {
         case "response.output_text.delta":
           exchanges.at(-1)!.reply += event.delta;
@@ -65,9 +64,17 @@ async function send(): Promise<void> {
           break;
       }
     }
+
+    waiting = false;
   } catch (err) {
     new Notice("Failed to get response");
+    waiting = false;
   }
+}
+
+function stop(): void {
+  waiting = false;
+  controller.abort();
 }
 
 function copy(content: string): void {
@@ -77,7 +84,7 @@ function copy(content: string): void {
 }
 
 function refresh(): void {
-  currentChatId += 1;
+  stop();
   exchanges.length = 0;
   prevResponseId = null;
 }
@@ -127,9 +134,16 @@ function onKeyDown(event: KeyboardEvent): void {
     <button class="newchat-button" onclick={refresh}>
       New Chat
     </button>
-    <button class="send-button" onclick={send}>
-      Send
-    </button>
+    {#if waiting}
+      <button class="stop-button" onclick={stop}>
+        Stop
+      </button>
+    {/if}
+    {#if !waiting}
+      <button class="send-button" onclick={send}>
+        Send
+      </button>
+    {/if}
   </div>
 </div>
 
@@ -225,7 +239,7 @@ function onKeyDown(event: KeyboardEvent): void {
 
 }
 
-.send-button {
+.send-button, .stop-button {
   position: absolute;
   bottom: 10px;
   right: 10px;
