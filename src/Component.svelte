@@ -1,7 +1,8 @@
 <script lang="ts">
-import { Notice, type SecretStorage, setIcon } from "obsidian";
-import Client from "openai";
-import { onMount } from "svelte";
+import { Notice, setIcon } from "obsidian";
+import OpenAI from "openai";
+
+import type { SecretStorage } from "obsidian";
 import type { Setting } from "./setting";
 
 interface Props {
@@ -9,58 +10,59 @@ interface Props {
   secretStorage: SecretStorage;
 }
 
+interface Exchange {
+  query: string;
+  reply: string;
+}
+
+let textArea!: HTMLTextAreaElement;
+
 let { setting, secretStorage }: Props = $props();
 
+let currentChatId: number = 0;
+let prevResponseId: string | null = null;
+let exchanges: Exchange[] = $state([]);
+
 let client = $derived.by(() => {
-  return new Client({
+  return new OpenAI({
     apiKey: secretStorage.getSecret(setting.apiKey),
     baseURL: setting.baseURL,
     dangerouslyAllowBrowser: true,
   });
 });
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-let messages: Message[] = $state([]);
-let inputContent = $state("");
-let prevResponseId: string | undefined;
-
-type Request = Client.Responses.ResponseCreateParamsStreaming;
-
 async function send(): Promise<void> {
-  if (inputContent.trim() === "") {
+  if (textArea.value.trim() === "") {
     new Notice("Cannot send empty content");
     return;
   }
 
-  const message: Message = { role: "user", content: inputContent };
-  const responseIdx = messages.push(message);
+  const chatId = currentChatId;
 
-  let request: Request = {
+  const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
     model: setting.modelName,
-    input: inputContent,
+    input: textArea.value,
     stream: true,
+    previous_response_id: prevResponseId,
   };
-  if (prevResponseId != undefined) {
-    request["previous_response_id"] = prevResponseId;
-  }
-
-  inputContent = "";
+  exchanges.push({ query: textArea.value, reply: "" });
+  textArea.value = "";
 
   const stream = await client.responses.create(request);
+
   try {
     for await (const event of stream) {
-      if (event.type === "response.output_text.delta") {
-        if (messages[responseIdx] === undefined) {
-          messages.push({ role: "assistant", content: event.delta });
-        } else {
-          messages[responseIdx].content += event.delta;
-        }
-      } else if (event.type === "response.completed") {
-        prevResponseId = event.response.id;
+      if (chatId !== currentChatId) {
+        break;
+      }
+
+      switch (event.type) {
+        case "response.output_text.delta":
+          exchanges.at(-1)!.reply += event.delta;
+          break;
+        case "response.completed":
+          prevResponseId = event.response.id;
+          break;
       }
     }
   } catch (err) {
@@ -68,44 +70,46 @@ async function send(): Promise<void> {
   }
 }
 
-/** Copy `text` to clipboard. */
-async function copyText(text: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(text);
-    new Notice("Copied message");
-  } catch (err) {
-    new Notice("Failed to copy message");
-  }
+function copy(content: string): void {
+  navigator.clipboard.writeText(content)
+    .then(() => new Notice("Copied message"))
+    .catch(() => new Notice("Failed to copy message"));
 }
 
-// Focus on load
-let textArea: HTMLTextAreaElement | undefined = $state();
-onMount(() => {
-  if (textArea != undefined) {
-    textArea.focus();
+function refresh(): void {
+  currentChatId += 1;
+  exchanges.length = 0;
+  prevResponseId = null;
+}
+
+function onKeyDown(event: KeyboardEvent): void {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    send();
   }
-});
+}
 </script>
 
-<div class="chat-component">
-  <div class="message-box-list">
-    {#each messages as msg}
-      <div class="message-box">
+<div class="component">
+  <div class="qrbox-list">
+    {#each exchanges as exchange}
+      <div class="query-box">
         <span
-          class="message-icon"
-          {@attach (node: HTMLElement) => {
-            if (msg.role === "user") {
-              setIcon(node, "user-round");
-            } else {
-              setIcon(node, "bot");
-            }
-          }}
+          class="query-icon"
+          {@attach (node: HTMLSpanElement) => setIcon(node, "user-round")}
         ></span>
-        <p class="message-content">{msg.content}</p>
-        <button
-          class="copy-button"
-          onclick={() => copyText(msg.content)}
-        >
+        <p class="query-content">{exchange.query}</p>
+        <button class="copy-button" onclick={() => copy(exchange.query)}>
+          Copy
+        </button>
+      </div>
+      <div class="reply-box">
+        <span
+          class="reply-icon"
+          {@attach (node: HTMLSpanElement) => setIcon(node, "bot")}
+        ></span>
+        <p class="reply-content">{exchange.reply}</p>
+        <button class="copy-button" onclick={() => copy(exchange.reply)}>
           Copy
         </button>
       </div>
@@ -117,21 +121,10 @@ onMount(() => {
       class="input-textarea"
       placeholder="Enter your prompt here..."
       bind:this={textArea}
-      bind:value={inputContent}
-      onkeydown={(event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-          event.preventDefault();
-          send();
-        }
-      }}
+      onkeydown={onKeyDown}
+      {@attach (node: HTMLTextAreaElement) => node.focus()}
     ></textarea>
-    <button
-      class="newchat-button"
-      onclick={() => {
-        prevResponseId = undefined;
-        messages.length = 0;
-      }}
-    >
+    <button class="newchat-button" onclick={refresh}>
       New Chat
     </button>
     <button class="send-button" onclick={send}>
@@ -141,7 +134,7 @@ onMount(() => {
 </div>
 
 <style>
-.chat-component {
+.component {
   /* Properties for serving as a container element */ 
   display: flex;
   flex-direction: column;
@@ -155,7 +148,7 @@ onMount(() => {
   background-color: var(--background-primary);
 }
 
-.message-box-list {
+.qrbox-list {
   /* Properties for serving as a container element */ 
   position: relative;
   display: flex;
@@ -166,7 +159,7 @@ onMount(() => {
   flex: 8.5; 
 }
 
-.message-box {
+.query-box, .reply-box {
   /* Properties for serving as a container element */ 
   display: inline-flex;
   flex-direction: row;
@@ -182,13 +175,13 @@ onMount(() => {
   margin: 4px;
 }
 
-.message-icon {
+.query-icon, .reply-icon {
   flex: 2;
 
   --icon-size: 24px;
 }
 
-.message-content {
+.query-content, .reply-content {
   flex: 70;
   margin: 1.5px;
   white-space: pre-wrap;
@@ -196,15 +189,15 @@ onMount(() => {
   user-select: text;
 }
 
-.newchat-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
 .copy-button {
   position: absolute;
   bottom: 10px;
+  right: 10px;
+}
+
+.newchat-button {
+  position: absolute;
+  top: 10px;
   right: 10px;
 }
 

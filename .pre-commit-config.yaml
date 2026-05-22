@@ -6,6 +6,12 @@ repos:
         entry: npx dprint check --allow-no-files
         language: system
         types_or: [ts, javascript, json, yaml, markdown, svelte]
+      - id: check-type
+        name: Check Type
+        entry: npx tsc
+        language: system
+        types_or: [ts, svelte]
+        pass_filenames: false
       - id: lint
         name: Lint
         entry: npx eslint

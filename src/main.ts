@@ -1,6 +1,8 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
-import { DEFAULT_SETTING, type Setting, SettingTab } from "./setting";
+import { DEFAULT_SETTING, SettingTab } from "./setting";
 import { ChatView } from "./view";
+
+import type { Setting } from "./setting";
 
 class ChatSpace extends Plugin {
   setting!: Setting;
@@ -8,11 +10,12 @@ class ChatSpace extends Plugin {
   /** Initialize the plugin.
    *
    * The initialization involves:
+   *
    * - load setting
-   * - register command
+   * - register view
+   * - register commands
    */
   override async onload(): Promise<void> {
-    console.debug("Loading ChatSpace plugin");
     await this.loadSettings();
 
     this.addSettingTab(new SettingTab(this.app, this));
@@ -28,10 +31,6 @@ class ChatSpace extends Plugin {
         });
       },
     });
-  }
-
-  override onunload(): void {
-    console.debug("Unloading ChatSpace plugin");
   }
 
   /** Save settings to `data.json`. */

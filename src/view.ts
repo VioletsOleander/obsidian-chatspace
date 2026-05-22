@@ -1,7 +1,9 @@
-import { ItemView, SecretStorage, type WorkspaceLeaf } from "obsidian";
+import { ItemView, SecretStorage } from "obsidian";
 import { mount, unmount } from "svelte";
 import Component from "./Component.svelte";
-import type { Setting } from "./setting";
+
+import { type WorkspaceLeaf } from "obsidian";
+import { type Setting } from "./setting";
 
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";

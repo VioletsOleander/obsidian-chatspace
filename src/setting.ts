@@ -1,4 +1,6 @@
-import { type App, PluginSettingTab, SecretComponent, Setting as SettingItem, type TextComponent } from "obsidian";
+import { PluginSettingTab, SecretComponent, Setting as SettingItem } from "obsidian";
+
+import type { App, TextComponent } from "obsidian";
 import type ChatSpace from "./main";
 
 interface Setting {
