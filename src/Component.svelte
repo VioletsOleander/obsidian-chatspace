@@ -46,10 +46,9 @@ async function send(): Promise<void> {
   const index = exchanges.push({ query: textArea.value, reply: "" }) - 1;
   textArea.value = "";
 
-  const controller = new AbortController();
-
   try {
     waiting = true;
+    controller = new AbortController();
 
     const stream = await client.responses.create(request, {
       signal: controller.signal,
@@ -58,7 +57,9 @@ async function send(): Promise<void> {
     for await (const event of stream) {
       switch (event.type) {
         case "response.output_text.delta":
-          exchanges[index]!.reply += event.delta;
+          if (exchanges[index] !== undefined) {
+            exchanges[index].reply += event.delta;
+          }
           break;
         case "response.completed":
           prevResponseId = event.response.id;
@@ -69,12 +70,13 @@ async function send(): Promise<void> {
     new Notice("Failed to get response");
   } finally {
     waiting = false;
+    controller = null;
   }
 }
 
 function stop(): void {
-  waiting = false;
   controller?.abort();
+  waiting = false;
 }
 
 function copy(content: string): void {
