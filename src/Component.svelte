@@ -15,13 +15,8 @@ interface Exchange {
   reply: string;
 }
 
-let textArea!: HTMLTextAreaElement;
-
-let prevResponseId: string | null = null;
-let exchanges: Exchange[] = $state([]);
-
-let { setting, secretStorage }: Props = $props();
-let client = $derived.by(() => {
+const { setting, secretStorage }: Props = $props();
+const client = $derived.by(() => {
   return new OpenAI({
     apiKey: secretStorage.getSecret(setting.apiKey),
     baseURL: setting.baseURL,
@@ -29,8 +24,12 @@ let client = $derived.by(() => {
   });
 });
 
+const exchanges: Exchange[] = $state([]);
+
+let textArea!: HTMLTextAreaElement;
+let prevResponseId: string | null = null;
+let controller: AbortController | null = null;
 let waiting = $state(false);
-let controller = new AbortController();
 
 async function send(): Promise<void> {
   if (textArea.value.trim() === "") {
@@ -44,37 +43,38 @@ async function send(): Promise<void> {
     stream: true,
     previous_response_id: prevResponseId,
   };
-  exchanges.push({ query: textArea.value, reply: "" });
+  const index = exchanges.push({ query: textArea.value, reply: "" }) - 1;
   textArea.value = "";
 
-  const stream = await client.responses.create(request, {
-    signal: controller.signal,
-  });
+  const controller = new AbortController();
 
   try {
     waiting = true;
 
+    const stream = await client.responses.create(request, {
+      signal: controller.signal,
+    });
+
     for await (const event of stream) {
       switch (event.type) {
         case "response.output_text.delta":
-          exchanges.at(-1)!.reply += event.delta;
+          exchanges[index]!.reply += event.delta;
           break;
         case "response.completed":
           prevResponseId = event.response.id;
           break;
       }
     }
-
-    waiting = false;
   } catch (err) {
     new Notice("Failed to get response");
+  } finally {
     waiting = false;
   }
 }
 
 function stop(): void {
   waiting = false;
-  controller.abort();
+  controller?.abort();
 }
 
 function copy(content: string): void {
@@ -90,10 +90,14 @@ function refresh(): void {
 }
 
 function onKeyDown(event: KeyboardEvent): void {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    send();
+  if (waiting) {
+    return;
   }
+  if (event.key !== "Enter" || event.shiftKey) {
+    return;
+  }
+  event.preventDefault();
+  send();
 }
 </script>
 
