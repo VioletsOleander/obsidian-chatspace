@@ -45,7 +45,7 @@ class SettingTab extends PluginSettingTab {
     this.addTextAreaItem(
       container,
       "Prompts",
-      "Array of {<name>: <content>} object. Example: [{\"explain\": \"explain the following content\"}]",
+      "Array of {<name>: <content>} object. Example: [{\"name\": \"explain\": \"content\": \"explain the following content\"}]",
       "prompts",
     );
   }

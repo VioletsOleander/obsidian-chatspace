@@ -52,10 +52,12 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
       selection = this.editor.getValue();
     }
 
-    toggleChat(this.plugin);
-    const query = item.content + " " + selection;
-    pool.query = query;
-    return;
+    void toggleChat(this.plugin).then(
+      () => {
+        const query = item.content + " " + selection;
+        pool.query = query;
+      },
+    );
   }
 }
 

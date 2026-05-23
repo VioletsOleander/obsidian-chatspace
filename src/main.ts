@@ -27,8 +27,8 @@ class ChatSpace extends Plugin {
     this.addCommand({
       id: "toggle-chat",
       name: "Toggle chat",
-      callback: () => {
-        toggleChat(this);
+      callback: async () => {
+        await toggleChat(this);
       },
     });
     this.addCommand({

@@ -4,7 +4,7 @@ import { Notice } from "obsidian";
 import type { ChatSpace } from "@/main";
 import type { WorkspaceLeaf } from "obsidian";
 
-/** Reveal existing `viewType` view or creat a new `viewType` view. */
+/** Reveal existing `viewType` view or create a new `viewType` view. */
 async function activateView(plugin: ChatSpace, viewType: string): Promise<void> {
   const workspace = plugin.app.workspace;
   const firstLeaf = workspace.getLeavesOfType(viewType)[0];
@@ -22,8 +22,8 @@ async function activateView(plugin: ChatSpace, viewType: string): Promise<void> 
 }
 
 /** Reveal existing chat view or create a new chat view. */
-function toggleChat(plugin: ChatSpace): void {
-  activateView(plugin, ChatView.viewType).catch(() => new Notice("Failed to activate view"));
+async function toggleChat(plugin: ChatSpace): Promise<void> {
+  await activateView(plugin, ChatView.viewType).catch(() => new Notice("Failed to activate view"));
 }
 
 export { activateView, toggleChat };

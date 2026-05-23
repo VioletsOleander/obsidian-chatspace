@@ -1,4 +1,6 @@
 <script lang="ts">
+import DOMPurify from "dompurify";
+import { marked } from "marked";
 import { Notice, setIcon } from "obsidian";
 import OpenAI from "openai";
 import { untrack } from "svelte";
@@ -30,17 +32,20 @@ $effect(
   () => {
     const query = pool.query;
     untrack(() => {
+      // TODO: set query = "" will actually trigger this effect again
+      // this conditional serves as the escape path for the second trigger
+      // more elegant method is required
+      if (query.trim() === "") {
+        return;
+      }
+
       void send(query);
+      pool.query = "";
     });
   },
 );
 
 async function send(content: string): Promise<void> {
-  if (content.trim() === "") {
-    new Notice("Cannot send empty content");
-    return;
-  }
-
   const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
     model: setting.modelName,
     input: content,
@@ -135,7 +140,9 @@ function onKeyDown(event: KeyboardEvent): void {
             setIcon(node, "bot");
           }}
         ></span>
-        <p class="reply-content">{exchange.reply}</p>
+        <div class="reply-content">
+          {@html DOMPurify.sanitize(marked.parse(exchange.reply, { async: false }))}
+        </div>
         <button
           class="copy-button"
           onclick={() => {
@@ -171,6 +178,7 @@ function onKeyDown(event: KeyboardEvent): void {
         class="send-button"
         onclick={() => {
           pool.query = textArea.value;
+          textArea.value = "";
         }}
       >
         Send
@@ -190,7 +198,7 @@ function onKeyDown(event: KeyboardEvent): void {
   width: 100%;
 
   font-size: var(--font-text-size);
-  font-family: var(--font-text-theme);
+  font-family: var(--font-interface-theme), var(--font-text-theme), var(--font-monospace-theme);
   background-color: var(--background-primary);
 }
 
@@ -227,10 +235,17 @@ function onKeyDown(event: KeyboardEvent): void {
   --icon-size: 24px;
 }
 
-.query-content, .reply-content {
+.query-content {
   flex: 70;
   margin: 1.5px;
   white-space: pre-wrap;
+
+  user-select: text;
+}
+
+.reply-content {
+  flex: 70;
+  margin: 1.5px;
 
   user-select: text;
 }
