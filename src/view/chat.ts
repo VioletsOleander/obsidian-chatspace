@@ -1,20 +1,24 @@
-import { ItemView, SecretStorage } from "obsidian";
+import { ItemView } from "obsidian";
 import { mount, unmount } from "svelte";
 import Component from "./Component.svelte";
 
-import type { WorkspaceLeaf } from "obsidian";
-import type { Setting } from "./setting";
+import type ChatSpace from "@/main";
+import type { Setting } from "@/setting";
+import type { SecretStorage, WorkspaceLeaf } from "obsidian";
+
+interface Props {
+  setting: Setting;
+  secret: SecretStorage;
+}
 
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
-  private setting: Setting;
-  private secretStorage: SecretStorage;
+  private plugin: ChatSpace;
   private component: ReturnType<typeof mount> | undefined;
 
-  constructor(leaf: WorkspaceLeaf, setting: Setting, secretStorage: SecretStorage) {
+  constructor(leaf: WorkspaceLeaf, plugin: ChatSpace) {
     super(leaf);
-    this.setting = setting;
-    this.secretStorage = secretStorage;
+    this.plugin = plugin;
     this.icon = "message-square";
   }
 
@@ -36,15 +40,20 @@ class ChatView extends ItemView {
     const container = this.contentEl;
     container.empty();
 
+    const props: Props = {
+      setting: this.plugin.setting,
+      secret: this.plugin.app.secretStorage,
+    };
+
     this.component = mount(Component, {
       target: container,
-      props: { setting: this.setting, secretStorage: this.secretStorage },
+      props: props,
     });
   }
 
   override async onClose(): Promise<void> {
     if (this.component) {
-      unmount(this.component).catch(() => {
+      return unmount(this.component).catch(() => {
         console.debug("Faild to unmount the component");
       });
     }
@@ -52,3 +61,4 @@ class ChatView extends ItemView {
 }
 
 export { ChatView };
+export type { Props };

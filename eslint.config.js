@@ -1,31 +1,52 @@
 import js from "@eslint/js";
-import obsidianmd from "eslint-plugin-obsidianmd";
+import obsidian from "eslint-plugin-obsidianmd";
+import svelte from "eslint-plugin-svelte";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
-import tseslint from "typescript-eslint";
+import svelteParser from "svelte-eslint-parser";
+import ts from "typescript-eslint";
 
 const config = defineConfig([
+  js.configs.recommended,
+  ts.configs.recommended,
+  ts.configs.strictTypeChecked,
+  ts.configs.stylisticTypeChecked,
+  ...obsidian.configs.recommended,
   {
     files: ["src/**/*.ts"],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.strictTypeChecked,
-      tseslint.configs.stylisticTypeChecked,
-    ],
     languageOptions: {
       globals: { ...globals.browser },
-      parser: tseslint.parser,
+      parser: ts.parser,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: [".svelte"],
       },
     },
   },
-  ...obsidianmd.configs.recommended,
+  {
+    files: ["src/**/*.svelte", "src/**/*.svelte.ts"],
+    extends: [svelte.configs.recommended],
+    languageOptions: {
+      globals: { ...globals.browser },
+      parser: svelteParser,
+      parserOptions: {
+        // parser for <script>
+        parser: ts.parser,
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: [".svelte"],
+      },
+    },
+    rules: {
+      "svelte/no-at-html-tags": "off",
+      "svelte/require-each-key": "off",
+    },
+  },
   globalIgnores([
     "dist/",
-    "build.js",
-    "eslint.config.js",
+    "**/*.js",
+    "**/*.json",
   ]),
 ]);
 
