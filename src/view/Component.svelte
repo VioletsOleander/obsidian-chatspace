@@ -1,29 +1,24 @@
 <script lang="ts">
 import { Notice, setIcon } from "obsidian";
 import OpenAI from "openai";
+import { untrack } from "svelte";
+import { pool } from "./storage.svelte";
 
-import type { SecretStorage } from "obsidian";
-import type { Setting } from "./setting";
-
-interface Props {
-  setting: Setting;
-  secretStorage: SecretStorage;
-}
+import type { Props } from "./chat";
 
 interface Exchange {
   query: string;
   reply: string;
 }
 
-const { setting, secretStorage }: Props = $props();
+const { setting, secret }: Props = $props();
 const client = $derived.by(() => {
   return new OpenAI({
-    apiKey: secretStorage.getSecret(setting.apiKey),
+    apiKey: secret.getSecret(setting.apiKey),
     baseURL: setting.baseURL,
     dangerouslyAllowBrowser: true,
   });
 });
-
 const exchanges: Exchange[] = $state([]);
 
 let textArea!: HTMLTextAreaElement;
@@ -31,20 +26,28 @@ let prevResponseId: string | null = null;
 let controller: AbortController | null = null;
 let waiting = $state(false);
 
-async function send(): Promise<void> {
-  if (textArea.value.trim() === "") {
+$effect(
+  () => {
+    const query = pool.query;
+    untrack(() => {
+      void send(query);
+    });
+  },
+);
+
+async function send(content: string): Promise<void> {
+  if (content.trim() === "") {
     new Notice("Cannot send empty content");
     return;
   }
 
   const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
     model: setting.modelName,
-    input: textArea.value,
+    input: content,
     stream: true,
     previous_response_id: prevResponseId,
   };
-  const index = exchanges.push({ query: textArea.value, reply: "" }) - 1;
-  textArea.value = "";
+  const index = exchanges.push({ query: content, reply: "" }) - 1;
 
   try {
     waiting = true;
@@ -66,7 +69,7 @@ async function send(): Promise<void> {
           break;
       }
     }
-  } catch (err) {
+  } catch {
     new Notice("Failed to get response");
   } finally {
     waiting = false;
@@ -99,7 +102,9 @@ function onKeyDown(event: KeyboardEvent): void {
     return;
   }
   event.preventDefault();
-  send();
+
+  pool.query = textArea.value;
+  textArea.value = "";
 }
 </script>
 
@@ -109,20 +114,34 @@ function onKeyDown(event: KeyboardEvent): void {
       <div class="query-box">
         <span
           class="query-icon"
-          {@attach (node: HTMLSpanElement) => setIcon(node, "user-round")}
+          {@attach (node: HTMLSpanElement) => {
+            setIcon(node, "user-round");
+          }}
         ></span>
         <p class="query-content">{exchange.query}</p>
-        <button class="copy-button" onclick={() => copy(exchange.query)}>
+        <button
+          class="copy-button"
+          onclick={() => {
+            copy(exchange.query);
+          }}
+        >
           Copy
         </button>
       </div>
       <div class="reply-box">
         <span
           class="reply-icon"
-          {@attach (node: HTMLSpanElement) => setIcon(node, "bot")}
+          {@attach (node: HTMLSpanElement) => {
+            setIcon(node, "bot");
+          }}
         ></span>
         <p class="reply-content">{exchange.reply}</p>
-        <button class="copy-button" onclick={() => copy(exchange.reply)}>
+        <button
+          class="copy-button"
+          onclick={() => {
+            copy(exchange.reply);
+          }}
+        >
           Copy
         </button>
       </div>
@@ -135,7 +154,9 @@ function onKeyDown(event: KeyboardEvent): void {
       placeholder="Enter your prompt here..."
       bind:this={textArea}
       onkeydown={onKeyDown}
-      {@attach (node: HTMLTextAreaElement) => node.focus()}
+      {@attach (node: HTMLTextAreaElement) => {
+        node.focus();
+      }}
     ></textarea>
     <button class="newchat-button" onclick={refresh}>
       New Chat
@@ -146,7 +167,12 @@ function onKeyDown(event: KeyboardEvent): void {
       </button>
     {/if}
     {#if !waiting}
-      <button class="send-button" onclick={send}>
+      <button
+        class="send-button"
+        onclick={() => {
+          pool.query = textArea.value;
+        }}
+      >
         Send
       </button>
     {/if}
