@@ -220,10 +220,10 @@ function onKeyDown(event: KeyboardEvent): void {
 
   position: relative;
   border-radius: 4px;
-  border: 1px solid var(--background-secondary);
+  border: 1px solid var(--background-primary-alt);
 
   padding: 16px;
-  background-color: var(--background-secondary);
+  background-color: var(--background-primary-alt);
 
   /* Properties for serving as a contained element */
   margin: 4px;
