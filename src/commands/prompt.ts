@@ -61,12 +61,7 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
   }
 }
 
-interface ApplyPromptCommand {
-  (plugin: ChatSpace, editor: Editor): void;
-  modal: PromptSuggestion | undefined;
-}
-
-function makdModal(plugin: ChatSpace): PromptSuggestion | null {
+function makeModal(plugin: ChatSpace): PromptSuggestion | null {
   try {
     const prompts = PromptsSchema.parse(JSON.parse(plugin.setting.prompts));
     return new PromptSuggestion(plugin, prompts);
@@ -81,21 +76,17 @@ function makdModal(plugin: ChatSpace): PromptSuggestion | null {
 }
 
 /** Open prompt selection modal and apply prompt to selection content on user choosing item. */
-const applyPrompt: ApplyPromptCommand = Object.assign(
-  (plugin: ChatSpace, editor: Editor): void => {
-    // Initialize suggestion modal on demand
-    if (applyPrompt.modal === undefined) {
-      const result = makdModal(plugin);
-      if (result === null) return;
-      applyPrompt.modal = result;
-    }
+function applyPrompt(plugin: ChatSpace, editor: Editor): void {
+  // Initialize suggestion modal
+  const modal = makeModal(plugin);
+  if (modal === null) {
+    return;
+  }
 
-    // Transfer control to suggestion modal
-    applyPrompt.modal.editor = editor;
-    applyPrompt.modal.open();
-  },
-  { modal: undefined },
-);
+  // Transfer control to suggestion modal
+  modal.editor = editor;
+  modal.open();
+}
 
 export { applyPrompt };
 export type { Prompt, Prompts, PromptSuggestion };
