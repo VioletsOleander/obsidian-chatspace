@@ -1,90 +1,17 @@
 <script lang="ts">
-import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { Notice, setIcon } from "obsidian";
-import OpenAI from "openai";
-import { untrack } from "svelte";
-import { pool } from "./storage.svelte";
 
-import type { Props } from "./chat";
+import DOMPurify from "dompurify";
 
-interface Exchange {
-  query: string;
-  reply: string;
-}
+import type { Props } from "./view";
 
-const { setting, secret }: Props = $props();
-const client = $derived.by(() => {
-  return new OpenAI({
-    apiKey: secret.getSecret(setting.apiKey),
-    baseURL: setting.baseURL,
-    dangerouslyAllowBrowser: true,
-  });
-});
-const exchanges: Exchange[] = $state([]);
-
+let { service }: Props = $props();
 let textArea!: HTMLTextAreaElement;
-let prevResponseId: string | null = null;
-let controller: AbortController | null = null;
-let waiting = $state(false);
 
-$effect(
-  () => {
-    const query = pool.query;
-    untrack(() => {
-      // TODO: set query = "" will actually trigger this effect again
-      // this conditional serves as the escape path for the second trigger
-      // more elegant method is required
-      if (query.trim() === "") {
-        return;
-      }
-
-      void send(query);
-      pool.query = "";
-    });
-  },
-);
-
-async function send(content: string): Promise<void> {
-  const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
-    model: setting.modelName,
-    input: content,
-    stream: true,
-    previous_response_id: prevResponseId,
-  };
-  const index = exchanges.push({ query: content, reply: "" }) - 1;
-
-  try {
-    waiting = true;
-    controller = new AbortController();
-
-    const stream = await client.responses.create(request, {
-      signal: controller.signal,
-    });
-
-    for await (const event of stream) {
-      switch (event.type) {
-        case "response.output_text.delta":
-          if (exchanges[index] !== undefined) {
-            exchanges[index].reply += event.delta;
-          }
-          break;
-        case "response.completed":
-          prevResponseId = event.response.id;
-          break;
-      }
-    }
-  } catch {
-    new Notice("Failed to get response");
-  } finally {
-    waiting = false;
-    controller = null;
-  }
-}
-
-function stop(): void {
-  controller?.abort();
-  waiting = false;
+function send(): void {
+  void service.send(textArea.value);
+  textArea.value = "";
 }
 
 function copy(content: string): void {
@@ -92,30 +19,11 @@ function copy(content: string): void {
     .then(() => new Notice("Copied message"))
     .catch(() => new Notice("Failed to copy message"));
 }
-
-function refresh(): void {
-  stop();
-  exchanges.length = 0;
-  prevResponseId = null;
-}
-
-function onKeyDown(event: KeyboardEvent): void {
-  if (waiting) {
-    return;
-  }
-  if (event.key !== "Enter" || event.shiftKey) {
-    return;
-  }
-  event.preventDefault();
-
-  pool.query = textArea.value;
-  textArea.value = "";
-}
 </script>
 
 <div class="component">
   <div class="qrbox-list">
-    {#each exchanges as exchange}
+    {#each service.getExchanges() as exchange}
       <div class="query-box">
         <span
           class="query-icon"
@@ -160,25 +68,41 @@ function onKeyDown(event: KeyboardEvent): void {
       class="input-textarea"
       placeholder="Enter your prompt here..."
       bind:this={textArea}
-      onkeydown={onKeyDown}
+      onkeydown={(event: KeyboardEvent) => {
+        if (service.isWaiting()) return;
+        if (event.key !== "Enter" || event.shiftKey) return;
+        if (textArea.value.trim() === "") return;
+
+        event.preventDefault();
+        send();
+      }}
       {@attach (node: HTMLTextAreaElement) => {
         node.focus();
       }}
     ></textarea>
-    <button class="newchat-button" onclick={refresh}>
+    <button
+      class="newchat-button"
+      onclick={() => {
+        service.refresh();
+      }}
+    >
       New Chat
     </button>
-    {#if waiting}
-      <button class="stop-button" onclick={stop}>
+    {#if service.isWaiting()}
+      <button
+        class="stop-button"
+        onclick={() => {
+          service.stop();
+        }}
+      >
         Stop
       </button>
-    {/if}
-    {#if !waiting}
+    {:else}
       <button
         class="send-button"
         onclick={() => {
-          pool.query = textArea.value;
-          textArea.value = "";
+          if (textArea.value.trim() === "") return;
+          send();
         }}
       >
         Send
@@ -230,7 +154,7 @@ function onKeyDown(event: KeyboardEvent): void {
 }
 
 .query-icon, .reply-icon {
-  flex: 2;
+  flex: 3;
 
   --icon-size: 24px;
 }

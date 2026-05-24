@@ -1,28 +1,39 @@
 import { Plugin } from "obsidian";
+import { ChatView } from "./chat/view";
 import { applyPrompt } from "./commands/prompt";
 import { toggleChat } from "./commands/toggle";
-import { DEFAULT_SETTING, SettingTab } from "./setting";
-import { ChatView } from "./view/chat";
+import { SettingTab } from "./setting";
 
+import type { App, PluginManifest } from "obsidian";
+import type { ChatService } from "./chat/service.svelte";
 import type { Setting } from "./setting";
 
 class ChatSpace extends Plugin {
-  setting!: Setting;
+  setting: Setting;
+  service: ChatService | null;
 
-  /** Initialize the plugin.
-   *
-   * The initialization involves:
-   *
-   * - load setting
-   * - register view
-   * - register commands
-   */
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
+    this.setting = {
+      apiKey: "",
+      baseURL: "",
+      modelName: "",
+      prompts: "",
+    };
+    this.service = null;
+  }
+
   override async onload(): Promise<void> {
-    await this.loadSettings();
+    await this.loadSetting();
 
     this.addSettingTab(new SettingTab(this.app, this));
 
-    this.registerView(ChatView.viewType, (leaf) => new ChatView(leaf, this));
+    this.registerView(
+      ChatView.viewType,
+      (leaf) => {
+        return new ChatView(this, leaf);
+      },
+    );
 
     this.addCommand({
       id: "toggle-chat",
@@ -41,16 +52,16 @@ class ChatSpace extends Plugin {
   }
 
   /** Save settings to `data.json`. */
-  async saveSettings(): Promise<void> {
+  async saveSetting(): Promise<void> {
     await this.saveData(this.setting);
   }
 
   /** Load `this.setting` from `data.json` or default values. */
-  private async loadSettings(): Promise<void> {
+  private async loadSetting(): Promise<void> {
     // Later source overwrite earlier ones
     const loadedSetting = (await this.loadData()) as Partial<Setting>;
     this.setting = {
-      ...DEFAULT_SETTING,
+      ...this.setting,
       ...loadedSetting,
     };
   }

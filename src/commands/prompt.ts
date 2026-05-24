@@ -1,6 +1,6 @@
-import { pool } from "@/view/storage.svelte";
+import * as z from "zod";
+
 import { FuzzySuggestModal, Notice } from "obsidian";
-import { z } from "zod";
 import { toggleChat } from "./toggle";
 
 import type { ChatSpace } from "@/main";
@@ -50,8 +50,12 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
 
     void toggleChat(this.plugin).then(
       () => {
+        if (this.plugin.service === null) {
+          new Notice("Error, chat service is not initialized");
+          return;
+        }
         const query = item.content + selection;
-        pool.query = query;
+        void this.plugin.service.send(query);
       },
     );
   }

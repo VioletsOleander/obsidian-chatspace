@@ -1,4 +1,4 @@
-import { ChatView } from "@/view/chat";
+import { ChatView } from "@/chat/view";
 import { Notice } from "obsidian";
 
 import type { ChatSpace } from "@/main";
