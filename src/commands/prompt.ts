@@ -24,12 +24,13 @@ type Prompts = z.infer<typeof PromptsSchema>;
 class PromptSuggestion extends FuzzySuggestModal<Prompt> {
   private prompts: Prompts;
   private plugin: ChatSpace;
-  editor: Editor | undefined;
+  private editor: Editor;
 
-  constructor(plugin: ChatSpace, prompts: Prompts) {
+  constructor(plugin: ChatSpace, editor: Editor, prompts: Prompts) {
     super(plugin.app);
     this.plugin = plugin;
     this.prompts = prompts;
+    this.editor = editor;
   }
 
   override getItems(): Prompts {
@@ -41,11 +42,6 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
   }
 
   override onChooseItem(item: Prompt): void {
-    if (this.editor === undefined) {
-      new Notice("Error: cannot find editor");
-      return;
-    }
-
     let selection = this.editor.getSelection();
     if (selection === "") {
       // Get all content if there is no selection
@@ -54,17 +50,17 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
 
     void toggleChat(this.plugin).then(
       () => {
-        const query = item.content + " " + selection;
+        const query = item.content + selection;
         pool.query = query;
       },
     );
   }
 }
 
-function makeModal(plugin: ChatSpace): PromptSuggestion | null {
+function makeModal(plugin: ChatSpace, editor: Editor): PromptSuggestion | null {
   try {
     const prompts = PromptsSchema.parse(JSON.parse(plugin.setting.prompts));
-    return new PromptSuggestion(plugin, prompts);
+    return new PromptSuggestion(plugin, editor, prompts);
   } catch (err) {
     if (err instanceof z.ZodError) {
       new Notice("Failed to parse prompts:\n" + z.prettifyError(err));
@@ -78,15 +74,13 @@ function makeModal(plugin: ChatSpace): PromptSuggestion | null {
 /** Open prompt selection modal and apply prompt to selection content on user choosing item. */
 function applyPrompt(plugin: ChatSpace, editor: Editor): void {
   // Initialize suggestion modal
-  const modal = makeModal(plugin);
+  const modal = makeModal(plugin, editor);
   if (modal === null) {
     return;
   }
 
   // Transfer control to suggestion modal
-  modal.editor = editor;
   modal.open();
 }
 
 export { applyPrompt };
-export type { Prompt, Prompts, PromptSuggestion };
