@@ -36,6 +36,8 @@ class ChatService {
 
   /** Send content and asynchronously wait for response. **/
   async send(content: string): Promise<void> {
+    if (content.trim() === "") return;
+
     const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
       model: this.model,
       input: content,
@@ -45,6 +47,8 @@ class ChatService {
     const index = this.exchanges.push({ query: content, reply: "" }) - 1;
 
     try {
+      if (this.waiting) this.stop();
+
       this.waiting = true;
       this.abortController = new AbortController();
 

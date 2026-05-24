@@ -53,7 +53,7 @@ class SettingTab extends PluginSettingTab {
       "Example: qwen-flash",
       (component: TextComponent) => {
         component
-          .setValue(this.plugin.setting.baseURL)
+          .setValue(this.plugin.setting.modelName)
           .onChange(async (value: string) => {
             await this.updateSetting("modelName", value);
             this.updateModel();

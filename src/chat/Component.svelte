@@ -71,7 +71,6 @@ function copy(content: string): void {
       onkeydown={(event: KeyboardEvent) => {
         if (service.isWaiting()) return;
         if (event.key !== "Enter" || event.shiftKey) return;
-        if (textArea.value.trim() === "") return;
 
         event.preventDefault();
         send();
