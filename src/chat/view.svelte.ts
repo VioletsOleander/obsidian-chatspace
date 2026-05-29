@@ -9,12 +9,14 @@ import type { WorkspaceLeaf } from "obsidian";
 
 interface Props {
   service: ChatService;
+  active: () => number;
 }
 
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
 
   private plugin: ChatSpace;
+  private active: number;
   private component: ReturnType<typeof mount> | null;
 
   constructor(plugin: ChatSpace, leaf: WorkspaceLeaf) {
@@ -22,6 +24,7 @@ class ChatView extends ItemView {
     this.plugin = plugin;
     this.icon = "message-square";
 
+    this.active = $state(0);
     this.component = null;
   }
 
@@ -30,10 +33,25 @@ class ChatView extends ItemView {
     container.empty();
 
     this.plugin.service ??= new ChatService(this.plugin);
+
     this.component = mount(Component, {
       target: container,
-      props: { service: this.plugin.service },
+      props: {
+        service: this.plugin.service,
+        // Primitive type is passed by value, passing `this.active` directly will lose reactivity
+        active: () => this.active,
+      },
     });
+
+    this.registerEvent(
+      this.app.workspace.on(
+        "active-leaf-change",
+        (leaf: WorkspaceLeaf | null) => {
+          if (leaf !== this.leaf) return;
+          this.active += 1;
+        },
+      ),
+    );
   }
 
   override async onClose(): Promise<void> {

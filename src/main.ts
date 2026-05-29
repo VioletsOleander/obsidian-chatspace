@@ -1,5 +1,5 @@
 import { Plugin } from "obsidian";
-import { ChatView } from "./chat/view";
+import { ChatView } from "./chat/view.svelte";
 import { applyPrompt } from "./commands/prompt";
 import { toggleChat } from "./commands/toggle";
 import { SettingTab } from "./setting";
