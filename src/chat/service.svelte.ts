@@ -60,6 +60,7 @@ class ChatService {
       for await (const event of stream) {
         switch (event.type) {
           case "response.output_text.delta":
+            // TODO: maybe also assign response id here
             if (this.exchanges[index] !== undefined) {
               this.exchanges[index].reply += event.delta;
             }

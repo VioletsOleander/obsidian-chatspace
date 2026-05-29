@@ -4,10 +4,28 @@ import { Notice, setIcon } from "obsidian";
 
 import DOMPurify from "dompurify";
 
-import type { Props } from "./view";
+import type { Props } from "./view.svelte";
 
-let { service }: Props = $props();
+let { service, active }: Props = $props();
 let textArea!: HTMLTextAreaElement;
+
+$effect(() => {
+  if (active() === 0) return;
+
+  let reqId1: number;
+  let reqId2: number;
+
+  reqId1 = requestAnimationFrame(() => {
+    reqId2 = requestAnimationFrame(() => {
+      textArea.focus();
+    });
+  });
+
+  return () => {
+    cancelAnimationFrame(reqId1);
+    cancelAnimationFrame(reqId2);
+  };
+});
 
 function send(): void {
   void service.send(textArea.value);
