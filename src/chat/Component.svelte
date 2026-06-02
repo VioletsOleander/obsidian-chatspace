@@ -49,7 +49,9 @@ function copy(content: string): void {
             setIcon(node, "user-round");
           }}
         ></span>
-        <p class="query-content">{exchange.query}</p>
+        <div class="query-content">
+          {@html DOMPurify.sanitize(marked.parse(exchange.query, { async: false }))}
+        </div>
         <button
           class="copy-button"
           onclick={() => {
@@ -176,15 +178,7 @@ function copy(content: string): void {
   --icon-size: 24px;
 }
 
-.query-content {
-  flex: 70;
-  margin: 1.5px;
-  white-space: pre-wrap;
-
-  user-select: text;
-}
-
-.reply-content {
+.query-content, .reply-content {
   flex: 70;
   margin: 1.5px;
 
