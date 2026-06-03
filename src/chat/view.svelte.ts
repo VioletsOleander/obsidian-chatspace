@@ -7,12 +7,6 @@ import Component from "./Component.svelte";
 import type { ChatSpace } from "@/main";
 import type { WorkspaceLeaf } from "obsidian";
 
-interface Props {
-  view: ChatView;
-  service: ChatService;
-  active: () => number;
-}
-
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
 
@@ -76,4 +70,3 @@ class ChatView extends ItemView {
 }
 
 export { ChatView };
-export type { Props };
