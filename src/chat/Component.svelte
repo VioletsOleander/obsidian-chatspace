@@ -36,20 +36,23 @@ function copy(content: string): void {
     .catch(() => new Notice("Failed to copy message"));
 }
 
-function makeRenderMarkdown(content: string): Attachment<HTMLDivElement> {
-  const renderMarkdown: Attachment<HTMLDivElement> = (node) => {
-    MarkdownRenderer.render(view.app, content, node, "", view)
+function makeEnqueuer(content: string): Attachment<HTMLDivElement> {
+  let prev = Promise.resolve();
+
+  const enqueuer: Attachment<HTMLDivElement> = (node) => {
+    // Enqueue markdown render invocation
+    prev = prev
+      .then(() => {
+        // clear current content before re-populate
+        node.replaceChildren();
+        return MarkdownRenderer.render(view.app, content, node, "", view);
+      })
       .catch(() => {
         new Notice("Failed to render markdown");
       });
-
-    return () => {
-      // Treadown: clear current content before update
-      node.replaceChildren();
-    };
   };
 
-  return renderMarkdown;
+  return enqueuer;
 }
 </script>
 
@@ -65,7 +68,7 @@ function makeRenderMarkdown(content: string): Attachment<HTMLDivElement> {
         ></span>
         <div
           class="query-content"
-          {@attach makeRenderMarkdown(exchange.query)}
+          {@attach makeEnqueuer(exchange.query)}
         >
         </div>
         <button
@@ -86,7 +89,7 @@ function makeRenderMarkdown(content: string): Attachment<HTMLDivElement> {
         ></span>
         <div
           class="reply-content"
-          {@attach makeRenderMarkdown(exchange.reply)}
+          {@attach makeEnqueuer(exchange.reply)}
         >
         </div>
         <button
