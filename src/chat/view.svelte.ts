@@ -7,11 +7,6 @@ import Component from "./Component.svelte";
 import type { ChatSpace } from "@/main";
 import type { WorkspaceLeaf } from "obsidian";
 
-interface Props {
-  service: ChatService;
-  active: () => number;
-}
-
 class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
 
@@ -37,6 +32,7 @@ class ChatView extends ItemView {
     this.component = mount(Component, {
       target: container,
       props: {
+        view: this,
         service: this.plugin.service,
         // Primitive type is passed by value, passing `this.active` directly will lose reactivity
         active: () => this.active,
@@ -74,4 +70,3 @@ class ChatView extends ItemView {
 }
 
 export { ChatView };
-export type { Props };

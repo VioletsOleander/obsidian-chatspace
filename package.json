@@ -17,8 +17,6 @@
     "svelte-check": "svelte-check"
   },
   "dependencies": {
-    "dompurify": "^3.4.5",
-    "marked": "^18.0.4",
     "obsidian": "latest",
     "openai": "^6.38.0",
     "zod": "^4.4.3"
