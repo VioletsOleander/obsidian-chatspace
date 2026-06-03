@@ -8,6 +8,7 @@ import type { ChatSpace } from "@/main";
 import type { WorkspaceLeaf } from "obsidian";
 
 interface Props {
+  view: ChatView;
   service: ChatService;
   active: () => number;
 }
@@ -37,6 +38,7 @@ class ChatView extends ItemView {
     this.component = mount(Component, {
       target: container,
       props: {
+        view: this,
         service: this.plugin.service,
         // Primitive type is passed by value, passing `this.active` directly will lose reactivity
         active: () => this.active,

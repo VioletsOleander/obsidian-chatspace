@@ -1,12 +1,10 @@
 <script lang="ts">
-import { marked } from "marked";
-import { Notice, setIcon } from "obsidian";
+import { MarkdownRenderer, Notice, setIcon } from "obsidian";
 
-import DOMPurify from "dompurify";
-
+import type { Attachment } from "svelte/attachments";
 import type { Props } from "./view.svelte";
 
-let { service, active }: Props = $props();
+let { view, service, active }: Props = $props();
 let textArea!: HTMLTextAreaElement;
 
 $effect(() => {
@@ -37,6 +35,22 @@ function copy(content: string): void {
     .then(() => new Notice("Copied message"))
     .catch(() => new Notice("Failed to copy message"));
 }
+
+function makeRenderMarkdown(content: string): Attachment<HTMLDivElement> {
+  const renderMarkdown: Attachment<HTMLDivElement> = (node) => {
+    MarkdownRenderer.render(view.app, content, node, "", view)
+      .catch(() => {
+        new Notice("Failed to render markdown");
+      });
+
+    return () => {
+      // Treadown: clear current content before update
+      node.replaceChildren();
+    };
+  };
+
+  return renderMarkdown;
+}
 </script>
 
 <div class="component">
@@ -49,8 +63,10 @@ function copy(content: string): void {
             setIcon(node, "user-round");
           }}
         ></span>
-        <div class="query-content">
-          {@html DOMPurify.sanitize(marked.parse(exchange.query, { async: false }))}
+        <div
+          class="query-content"
+          {@attach makeRenderMarkdown(exchange.query)}
+        >
         </div>
         <button
           class="copy-button"
@@ -68,8 +84,10 @@ function copy(content: string): void {
             setIcon(node, "bot");
           }}
         ></span>
-        <div class="reply-content">
-          {@html DOMPurify.sanitize(marked.parse(exchange.reply, { async: false }))}
+        <div
+          class="reply-content"
+          {@attach makeRenderMarkdown(exchange.reply)}
+        >
         </div>
         <button
           class="copy-button"
