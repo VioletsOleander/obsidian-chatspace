@@ -74,6 +74,7 @@ class SettingTab extends PluginSettingTab {
       },
     );
   }
+
   private async updateSetting(key: keyof Setting, value: string): Promise<void> {
     this.plugin.setting[key] = value;
     return this.plugin.saveSetting().catch(() => {
