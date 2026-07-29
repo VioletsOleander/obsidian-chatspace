@@ -31,6 +31,7 @@ let { view, getContent }: Props = $props();
 .markdown {
   flex: 70;
   margin: 1.5px;
+  overflow: auto;
 
   user-select: text;
 }
