@@ -18,7 +18,7 @@ async function activateView(plugin: ChatSpace, viewType: string): Promise<void> 
     leaf = firstLeaf;
   }
 
-  return workspace.revealLeaf(leaf);
+  return workspace.setActiveLeaf(leaf, { focus: true });
 }
 
 /** Reveal existing chat view or create a new chat view. */
