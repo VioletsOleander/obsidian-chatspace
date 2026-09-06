@@ -50,10 +50,6 @@ class PromptSuggestion extends FuzzySuggestModal<Prompt> {
 
     void toggleChat(this.plugin).then(
       () => {
-        if (this.plugin.service === null) {
-          new Notice("Error, chat service is not initialized");
-          return;
-        }
         const query = item.content + selection;
         void this.plugin.service.send(query);
       },

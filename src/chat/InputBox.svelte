@@ -3,33 +3,18 @@ import type { ChatService } from "./service.svelte";
 
 interface Props {
   service: ChatService;
-  active: () => number;
 }
 
-let { service, active }: Props = $props();
+let { service }: Props = $props();
 let textArea!: HTMLTextAreaElement;
-
-$effect(() => {
-  if (active() === 0) return;
-
-  let reqId1: number;
-  let reqId2: number;
-
-  reqId1 = requestAnimationFrame(() => {
-    reqId2 = requestAnimationFrame(() => {
-      textArea.focus();
-    });
-  });
-
-  return () => {
-    cancelAnimationFrame(reqId1);
-    cancelAnimationFrame(reqId2);
-  };
-});
 
 function send(): void {
   void service.send(textArea.value);
   textArea.value = "";
+}
+
+export function focus(): void {
+  textArea.focus();
 }
 </script>
 

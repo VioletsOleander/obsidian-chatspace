@@ -31,7 +31,7 @@ class SettingTab extends PluginSettingTab {
           .setValue(this.plugin.setting.apiKey)
           .onChange(async (value: string) => {
             await this.updateSetting("apiKey", value);
-            this.updateClient();
+            this.plugin.service.updateAPI(value);
           });
       },
     );
@@ -44,7 +44,7 @@ class SettingTab extends PluginSettingTab {
           .setValue(this.plugin.setting.baseURL)
           .onChange(async (value: string) => {
             await this.updateSetting("baseURL", value);
-            this.updateClient();
+            this.plugin.service.updateURL(value);
           });
       },
     );
@@ -56,7 +56,7 @@ class SettingTab extends PluginSettingTab {
           .setValue(this.plugin.setting.modelName)
           .onChange(async (value: string) => {
             await this.updateSetting("modelName", value);
-            this.updateModel();
+            this.plugin.service.updateModel(value);
           });
       },
     );
@@ -80,14 +80,6 @@ class SettingTab extends PluginSettingTab {
     return this.plugin.saveSetting().catch(() => {
       new Notice("Failed to save setting");
     });
-  }
-
-  private updateClient(): void {
-    this.plugin.service?.updateClient();
-  }
-
-  private updateModel(): void {
-    this.plugin.service?.updateModel();
   }
 
   private makeItem(name: string, desc: string): SettingItem {

@@ -1,34 +1,36 @@
-import { Notice } from "obsidian";
+import { Notice, SecretStorage } from "obsidian";
 
 import OpenAI from "openai";
-
-import type { ChatSpace } from "@/main";
 
 interface Exchange {
   query: string;
   reply: string;
 }
 
+interface Config {
+  apiKey: string;
+  baseURL: string;
+  modelName: string;
+}
+
 class ChatService {
-  private plugin: ChatSpace;
+  private config: Config;
+  private secret: SecretStorage;
+  private client!: OpenAI;
 
   private exchanges: Exchange[];
   private waiting: boolean;
-
-  private client: OpenAI;
-  private model: string;
   private prevResponseId: string | null;
 
   private abortController: AbortController | null;
 
-  constructor(plugin: ChatSpace) {
-    this.plugin = plugin;
+  constructor(config: Config, secret: SecretStorage) {
+    this.config = config;
+    this.secret = secret;
+    this.updateClient();
 
     this.exchanges = $state([]);
     this.waiting = $state(false);
-
-    this.client = this.makeClient();
-    this.model = plugin.setting.modelName;
     this.prevResponseId = null;
 
     this.abortController = null;
@@ -39,7 +41,7 @@ class ChatService {
     if (content.trim() === "") return;
 
     const request: OpenAI.Responses.ResponseCreateParamsStreaming = {
-      model: this.model,
+      model: this.config.modelName,
       input: content,
       stream: true,
       previous_response_id: this.prevResponseId,
@@ -99,25 +101,26 @@ class ChatService {
     return this.waiting;
   }
 
-  private makeClient(): OpenAI {
-    const setting = this.plugin.setting;
-    const secret = this.plugin.app.secretStorage;
+  updateAPI(apiKey: string): void {
+    this.config.apiKey = apiKey;
+    this.updateClient();
+  }
 
-    return new OpenAI({
-      apiKey: secret.getSecret(setting.apiKey),
-      baseURL: setting.baseURL,
+  updateURL(baseURL: string): void {
+    this.config.baseURL = baseURL;
+    this.updateClient();
+  }
+
+  updateModel(modelName: string): void {
+    this.config.modelName = modelName;
+  }
+
+  private updateClient(): void {
+    this.client = new OpenAI({
+      apiKey: this.secret.getSecret(this.config.apiKey),
+      baseURL: this.config.baseURL,
       dangerouslyAllowBrowser: true,
     });
-  }
-
-  /** Read plugin setting and refresh client. */
-  updateClient(): void {
-    this.client = this.makeClient();
-  }
-
-  /** Read plugin setting and update model name. */
-  updateModel(): void {
-    this.model = this.plugin.setting.modelName;
   }
 }
 

@@ -1,26 +1,27 @@
 import { Plugin } from "obsidian";
-import { ChatView } from "./chat/view.svelte";
+
+import { ChatService } from "./chat/service.svelte";
+import { ChatView } from "./chat/view";
 import { applyPrompt } from "./commands/prompt";
 import { toggleChat } from "./commands/toggle";
 import { SettingTab } from "./setting";
 
 import type { App, PluginManifest } from "obsidian";
-import type { ChatService } from "./chat/service.svelte";
 import type { Setting } from "./setting";
 
 class ChatSpace extends Plugin {
   setting: Setting;
-  service: ChatService | null;
+  service!: ChatService;
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
+
     this.setting = {
       apiKey: "",
       baseURL: "",
       modelName: "",
       prompts: "",
     };
-    this.service = null;
   }
 
   override async onload(): Promise<void> {
@@ -31,7 +32,7 @@ class ChatSpace extends Plugin {
     this.registerView(
       ChatView.viewType,
       (leaf) => {
-        return new ChatView(this, leaf);
+        return new ChatView(this.service, leaf);
       },
     );
 
@@ -49,6 +50,12 @@ class ChatSpace extends Plugin {
         applyPrompt(this, editor);
       },
     });
+
+    this.service = new ChatService({
+      apiKey: this.setting.apiKey,
+      baseURL: this.setting.baseURL,
+      modelName: this.setting.modelName,
+    }, this.app.secretStorage);
   }
 
   /** Save settings to `data.json`. */

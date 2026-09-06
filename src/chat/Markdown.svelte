@@ -1,7 +1,7 @@
 <script lang="ts">
 import { MarkdownRenderer, Notice } from "obsidian";
 
-import type { ChatView } from "./view.svelte";
+import type { ChatView } from "./view";
 
 interface Props {
   view: ChatView;

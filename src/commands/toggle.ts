@@ -1,4 +1,4 @@
-import { ChatView } from "@/chat/view.svelte";
+import { ChatView } from "@/chat/view";
 import { Notice } from "obsidian";
 
 import type { ChatSpace } from "@/main";
