@@ -5,25 +5,38 @@ import InputBox from "./InputBox.svelte";
 import Markdown from "./Markdown.svelte";
 
 import type { ChatService } from "./service.svelte";
-import type { ChatView } from "./view.svelte";
+import type { ChatView } from "./view";
 
 interface Props {
   view: ChatView;
   service: ChatService;
-  active: () => number;
 }
 
-let { view, service, active }: Props = $props();
+let { view, service }: Props = $props();
+let boxList!: HTMLDivElement;
+let inputBox!: InputBox;
 
 function copy(content: string): void {
   navigator.clipboard.writeText(content)
     .then(() => new Notice("Copied message"))
     .catch(() => new Notice("Failed to copy message"));
 }
+
+export function scrollDown(): void {
+  boxList.scrollBy(0, 200);
+}
+
+export function scrollUp(): void {
+  boxList.scrollBy(0, -200);
+}
+
+export function focusInputBox(): void {
+  inputBox.focus(); // eslint-disable-line
+}
 </script>
 
 <div class="component">
-  <div class="qrbox-list">
+  <div class="qrbox-list" bind:this={boxList}>
     {#each service.getExchanges() as exchange}
       <div class="query-box">
         <span
@@ -61,7 +74,7 @@ function copy(content: string): void {
       </div>
     {/each}
   </div>
-  <InputBox service={service} active={active} />
+  <InputBox service={service} bind:this={inputBox} />
 </div>
 
 <style>
