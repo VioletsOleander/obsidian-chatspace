@@ -142,8 +142,7 @@ export function focusInputBox(): void {
   bottom: 10px;
   right: 10px;
   cursor: pointer;
-  border: none;
-  outline: none;
+  box-shadow: none;
   background: none;
 }
 
