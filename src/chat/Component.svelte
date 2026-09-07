@@ -139,8 +139,8 @@ export function focusInputBox(): void {
 
 .copy-button {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
+  bottom: 4px;
+  right: 4px;
   cursor: pointer;
   border: none;
   outline: none;
