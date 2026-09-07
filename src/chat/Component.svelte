@@ -33,10 +33,6 @@ export function scrollUp(): void {
 export function focusInputBox(): void {
   inputBox.focus(); // eslint-disable-line
 }
-
-export function newChat(): void {
-  service.refresh();
-}
 </script>
 
 <div class="component">

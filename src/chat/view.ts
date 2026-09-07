@@ -52,8 +52,7 @@ class ChatView extends ItemView {
       return false;
     });
     this.scope.register(["Ctrl", "Shift"], "n", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.newChat(); // eslint-disable-line
+      this.service.refresh();
     });
   }
 
