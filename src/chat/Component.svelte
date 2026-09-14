@@ -13,6 +13,7 @@ interface Props {
 }
 
 let { view, service }: Props = $props();
+
 let boxList!: HTMLDivElement;
 let inputBox!: InputBox;
 
@@ -22,12 +23,14 @@ function copy(content: string): void {
     .catch(() => new Notice("Failed to copy message"));
 }
 
-export function scrollDown(): void {
-  boxList.scrollBy(0, 200);
+/** Scroll up by `ratio` x clientHeight */
+export function scrollDown(ratio: number): void {
+  boxList.scrollBy(0, boxList.clientHeight * ratio);
 }
 
-export function scrollUp(): void {
-  boxList.scrollBy(0, -200);
+/** Scroll up by `ratio` x clientHeight */
+export function scrollUp(ratio: number): void {
+  boxList.scrollBy(0, -boxList.clientHeight * ratio);
 }
 
 export function focusInputBox(): void {
