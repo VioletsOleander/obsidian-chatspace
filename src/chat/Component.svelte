@@ -51,7 +51,7 @@ export function focusInputBox(): void {
         <Markdown view={view} getContent={() => exchange.query} />
         <button
           class="copy-button"
-          aria-label="copy-button"
+          aria-label="Copy"
           onclick={() => {
             copy(exchange.query);
           }}
@@ -74,7 +74,7 @@ export function focusInputBox(): void {
         <Markdown view={view} getContent={() => exchange.reply} />
         <button
           class="copy-button"
-          aria-label="copy-button"
+          aria-label="Copy"
           onclick={() => {
             copy(exchange.reply);
           }}
@@ -145,8 +145,13 @@ export function focusInputBox(): void {
   bottom: 4px;
   right: 4px;
   cursor: pointer;
+  border-radius: 8px;
   box-shadow: none;
   background: none;
+}
+
+.copy-button:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .copy-icon {

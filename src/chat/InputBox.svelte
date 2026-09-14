@@ -38,7 +38,7 @@ export function focus(): void {
   ></textarea>
   <button
     class="newchat-button"
-    aria-label="newchat-button"
+    aria-label="New Chat"
     onclick={() => {
       service.refresh();
     }}
@@ -53,7 +53,7 @@ export function focus(): void {
   {#if service.isWaiting()}
     <button
       class="stop-button"
-      aria-label="stop-button"
+      aria-label="Stop"
       onclick={() => {
         service.stop();
       }}
@@ -68,7 +68,7 @@ export function focus(): void {
   {:else}
     <button
       class="send-button"
-      aria-label="send-button"
+      aria-label="Send"
       onclick={() => {
         if (textArea.value.trim() === "") return;
         send();
@@ -90,8 +90,13 @@ export function focus(): void {
   top: 3px;
   right: 3px;
   cursor: pointer;
+  border-radius: 8px;
   box-shadow: none;
   background: none;
+}
+
+.newchat-button:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .newchat-icon {
@@ -127,8 +132,13 @@ export function focus(): void {
   bottom: 3px;
   right: 3px;
   cursor: pointer;
+  border-radius: 8px;
   box-shadow: none;
   background: none;
+}
+
+.send-button:hover, .stop-button:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .send-icon, .stop-icon {
