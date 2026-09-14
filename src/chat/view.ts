@@ -35,16 +35,30 @@ class ChatView extends ItemView {
 
     this.scope.register(["Ctrl"], "j", () => {
       // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollDown(); // eslint-disable-line
+      this.component.scrollDown(0.1); // eslint-disable-line
 
       return false;
     });
     this.scope.register(["Ctrl"], "k", () => {
       // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollUp(); // eslint-disable-line
+      this.component.scrollUp(0.1); // eslint-disable-line
 
       return false;
     });
+
+    this.scope.register(["Ctrl"], "d", () => {
+      // @ts-ignore tsc can not reconginze svelte component type
+      this.component.scrollDown(0.5); // eslint-disable-line
+
+      return false;
+    });
+    this.scope.register(["Ctrl"], "u", () => {
+      // @ts-ignore tsc can not reconginze svelte component type
+      this.component.scrollUp(0.5); // eslint-disable-line
+
+      return false;
+    });
+
     this.scope.register(["Ctrl"], "l", () => {
       // @ts-ignore tsc can not reconginze svelte component type
       this.component.focusInputBox(); // eslint-disable-line
