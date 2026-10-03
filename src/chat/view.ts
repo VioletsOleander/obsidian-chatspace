@@ -46,6 +46,19 @@ class ChatView extends ItemView {
       return false;
     });
 
+    this.scope.register(["Ctrl"], "e", () => {
+      // @ts-ignore tsc can not reconginze svelte component type
+      this.component.scrollDown(0.1); // eslint-disable-line
+
+      return false;
+    });
+    this.scope.register(["Ctrl"], "y", () => {
+      // @ts-ignore tsc can not reconginze svelte component type
+      this.component.scrollUp(0.1); // eslint-disable-line
+
+      return false;
+    });
+
     this.scope.register(["Ctrl"], "d", () => {
       // @ts-ignore tsc can not reconginze svelte component type
       this.component.scrollDown(0.5); // eslint-disable-line
