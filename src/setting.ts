@@ -19,7 +19,7 @@ class SettingTab extends PluginSettingTab {
   }
 
   /** Add plugin settings when the tab is rendered. */
-  display(): void {
+  override display(): void {
     this.containerEl.empty();
 
     this.addSecretItem(
