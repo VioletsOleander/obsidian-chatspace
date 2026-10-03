@@ -17,7 +17,6 @@
     "svelte-check": "svelte-check"
   },
   "dependencies": {
-    "obsidian": "latest",
     "openai": "^6.38.0",
     "zod": "^4.4.3"
   },
@@ -30,6 +29,7 @@
     "eslint-plugin-obsidianmd": "0.1.9",
     "eslint-plugin-svelte": "^3.17.1",
     "globals": "14.0.0",
+    "obsidian": "latest",
     "svelte": "^5.55.5",
     "svelte-check": "^4.4.8",
     "svelte-eslint-parser": "^1.6.1",
