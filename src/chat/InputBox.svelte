@@ -85,24 +85,6 @@ export function focus(): void {
 </div>
 
 <style>
-.newchat-button {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  cursor: pointer;
-  border-radius: 8px;
-  box-shadow: none;
-  background: none;
-}
-
-.newchat-button:hover {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-
-.newchat-icon {
-  --icon-size: 16px;
-}
-
 .input-box {
   /* Properties for serving as a container element */ 
   position: relative;
@@ -121,10 +103,28 @@ export function focus(): void {
   height: 100%;
   width: 100%;
   resize: none;
+  padding-right: 32px;
 
   font-size: inherit;
   font-family: inherit;
+}
 
+.newchat-button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: none;
+  background: none;
+}
+
+.newchat-button:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.newchat-icon {
+  --icon-size: 16px;
 }
 
 .send-button, .stop-button {
