@@ -8,12 +8,9 @@
   "main": "main.js",
   "type": "module",
   "scripts": {
-    "watch": "node build.js",
-    "build": "node build.js production",
-    "check-type": "tsc",
+    "watch": "node esbuild.config.js",
+    "build": "svelte-check && node esbuild.config.js production",
     "lint": "eslint .",
-    "fmt": "dprint fmt",
-    "check-fmt": "dprint check",
     "svelte-check": "svelte-check"
   },
   "dependencies": {
@@ -21,9 +18,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/js": "9.30.1",
     "@types/node": "^16.11.6",
-    "dprint": "^0.54.0",
     "esbuild": "0.25.5",
     "esbuild-svelte": "^0.9.5",
     "eslint-plugin-obsidianmd": "0.1.9",
@@ -34,7 +29,7 @@
     "svelte-check": "^4.4.8",
     "svelte-eslint-parser": "^1.6.1",
     "typescript": "^5.8.3",
-    "typescript-eslint": "8.35.1",
+    "typescript-eslint": "^8.35.1",
     "typescript-svelte-plugin": "^0.3.52"
   }
 }

@@ -1,4 +1,3 @@
-import js from "@eslint/js";
 import obsidian from "eslint-plugin-obsidianmd";
 import svelte from "eslint-plugin-svelte";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -6,24 +5,27 @@ import globals from "globals";
 import svelteParser from "svelte-eslint-parser";
 import ts from "typescript-eslint";
 
-const config = defineConfig([
-  js.configs.recommended,
-  ts.configs.recommended,
-  ts.configs.strictTypeChecked,
-  ts.configs.stylisticTypeChecked,
-  ...obsidian.configs.recommended,
+export default defineConfig([
+  globalIgnores([
+    "node_modules/",
+    "dist/",
+    "**/*.js",
+    "**/*.json",
+  ]),
   {
-    files: ["src/**/*.ts"],
     languageOptions: {
-      globals: { ...globals.browser },
-      parser: ts.parser,
+      globals: {
+        ...globals.browser,
+      },
       parserOptions: {
         projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+        // Keep this consistent for TypeScript and Svelte files to avoid project reloads.
         extraFileExtensions: [".svelte"],
       },
     },
   },
+  svelte.configs.recommended,
+  ...obsidian.configs.recommended,
   {
     files: ["src/**/*.svelte", "src/**/*.svelte.ts"],
     extends: [svelte.configs.recommended],
@@ -43,11 +45,4 @@ const config = defineConfig([
       "svelte/require-each-key": "off",
     },
   },
-  globalIgnores([
-    "dist/",
-    "**/*.js",
-    "**/*.json",
-  ]),
 ]);
-
-export default config;

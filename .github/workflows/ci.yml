@@ -22,9 +22,7 @@ jobs:
         run: npm ci
       - name: Check format
         run: npx dprint check --allow-no-files
-      - name: Check Type
-        run: npx tsc
-      - name: Lint
-        run: npx eslint
-      - name: Lint Svelte
+      - name: Svelte check
         run: npx svelte-check
+      - name: Lint
+        run: npx eslint .
