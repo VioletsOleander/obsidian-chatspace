@@ -72,7 +72,7 @@ class ChatView extends ItemView {
       return false;
     });
 
-    this.scope.register(["Ctrl"], "l", () => {
+    this.scope.register(["Ctrl"], "i", () => {
       // @ts-ignore tsc can not reconginze svelte component type
       this.component.focusInputBox(); // eslint-disable-line
 
