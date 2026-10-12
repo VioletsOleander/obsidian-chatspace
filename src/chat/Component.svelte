@@ -34,7 +34,7 @@ export function scrollUp(ratio: number): void {
 }
 
 export function focusInputBox(): void {
-  inputBox.focus(); // eslint-disable-line
+  inputBox.focus();
 }
 </script>
 

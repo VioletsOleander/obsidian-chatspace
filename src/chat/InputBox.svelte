@@ -23,7 +23,6 @@ export function focus(): void {
 <div class="input-box">
   <textarea
     class="input-textarea"
-    placeholder="Enter your prompt here..."
     bind:this={textArea}
     onkeydown={(event: KeyboardEvent) => {
       if (service.isWaiting()) return;

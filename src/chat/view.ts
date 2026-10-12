@@ -6,85 +6,34 @@ import Component from "./Component.svelte";
 import type { WorkspaceLeaf } from "obsidian";
 import type { ChatService } from "./service.svelte";
 
-class ChatView extends ItemView {
+export class ChatView extends ItemView {
   static viewType = "chatspace:chatview";
 
-  private service: ChatService;
-  private component!: ReturnType<typeof Component>;
+  #service: ChatService;
+  #component!: ReturnType<typeof Component>;
 
   constructor(service: ChatService, leaf: WorkspaceLeaf) {
     super(leaf);
 
-    this.service = service;
+    this.#service = service;
     this.icon = "message-square";
   }
 
   override async onOpen(): Promise<void> {
     this.contentEl.empty();
-    this.component = mount(Component, {
+    this.#component = mount(Component, {
       target: this.contentEl,
       props: {
         view: this,
-        service: this.service,
+        service: this.#service,
       },
     });
 
-    // We only need to assign it to this.scope
-    // Obsidian will handle the lifecycle on view focus and unfocus
-    this.scope = new Scope(this.app.scope);
-
-    this.scope.register(["Ctrl"], "j", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollDown(0.1); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "k", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollUp(0.1); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "e", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollDown(0.1); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "y", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollUp(0.1); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "d", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollDown(0.5); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "u", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.scrollUp(0.5); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "i", () => {
-      // @ts-ignore tsc can not reconginze svelte component type
-      this.component.focusInputBox(); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl", "Shift"], "n", () => {
-      this.service.refresh();
-    });
+    this.#bindKeys();
   }
 
   override async onClose(): Promise<void> {
-    unmount(this.component).catch(() => {
+    unmount(this.#component).catch(() => {
       new Notice("Faild to unmount the component");
     });
   }
@@ -98,6 +47,78 @@ class ChatView extends ItemView {
   getDisplayText(): string {
     return "Chat view";
   }
-}
 
-export { ChatView };
+  #bindKeys() {
+    // We only need to assign it to this.scope
+    // Obsidian will handle the lifecycle on view focus and unfocus
+    this.scope = new Scope(this.app.scope);
+
+    // Scroll keys.
+    this.scope.register(["Ctrl"], "j", () => {
+      // @ts-ignore
+      this.#component.scrollDown(0.1); // eslint-disable-line
+
+      return false;
+    });
+    this.scope.register(["Ctrl"], "k", () => {
+      // @ts-ignore
+      this.#component.scrollUp(0.1); // eslint-disable-line
+
+      return false;
+    });
+
+    this.scope.register(["Ctrl"], "e", () => {
+      // @ts-ignore
+      this.#component.scrollDown(0.1); // eslint-disable-line
+
+      return false;
+    });
+    this.scope.register(["Ctrl"], "y", () => {
+      // @ts-ignore
+      this.#component.scrollUp(0.1); // eslint-disable-line
+
+      return false;
+    });
+
+    this.scope.register(["Ctrl"], "d", () => {
+      // @ts-ignore
+      this.#component.scrollDown(0.5); // eslint-disable-line
+
+      return false;
+    });
+    this.scope.register(["Ctrl"], "u", () => {
+      // @ts-ignore
+      this.#component.scrollUp(0.5); // eslint-disable-line
+
+      return false;
+    });
+
+    this.scope.register(["Ctrl"], "i", () => {
+      // @ts-ignore
+      this.#component.focusInputBox(); // eslint-disable-line
+
+      return false;
+    });
+
+    this.scope.register(["Ctrl"], "c", () => {
+      const content = this.#service.getExchanges().last()?.reply;
+
+      if (content === undefined) {
+        new Notice("No existing reply to copy");
+        return false;
+      }
+
+      navigator.clipboard.writeText(content)
+        .then(() => new Notice("Copied message"))
+        .catch(() => new Notice("Failed to copy message"));
+
+      return false;
+    });
+
+    this.scope.register(["Ctrl", "Shift"], "n", () => {
+      this.#service.refresh();
+
+      return false;
+    });
+  }
+}
