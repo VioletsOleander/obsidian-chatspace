@@ -49,58 +49,17 @@ export class ChatView extends ItemView {
   }
 
   #bindKeys() {
-    // We only need to assign it to this.scope
-    // Obsidian will handle the lifecycle on view focus and unfocus
-    this.scope = new Scope(this.app.scope);
+    const scope = new Scope(this.app.scope);
 
-    // Scroll keys.
-    this.scope.register(["Ctrl"], "j", () => {
-      // @ts-ignore
-      this.#component.scrollDown(0.1); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "k", () => {
-      // @ts-ignore
-      this.#component.scrollUp(0.1); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "e", () => {
-      // @ts-ignore
-      this.#component.scrollDown(0.1); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "y", () => {
-      // @ts-ignore
-      this.#component.scrollUp(0.1); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "d", () => {
-      // @ts-ignore
-      this.#component.scrollDown(0.5); // eslint-disable-line
-
-      return false;
-    });
-    this.scope.register(["Ctrl"], "u", () => {
-      // @ts-ignore
-      this.#component.scrollUp(0.5); // eslint-disable-line
-
-      return false;
-    });
-
-    this.scope.register(["Ctrl"], "i", () => {
+    this.#bindScrollKeys(scope);
+    scope.register(["Ctrl"], "i", () => {
       // @ts-ignore
       this.#component.focusInputBox(); // eslint-disable-line
 
       return false;
     });
 
-    this.scope.register(["Ctrl"], "c", () => {
+    scope.register(["Ctrl"], "c", () => {
       const content = this.#service.getExchanges().last()?.reply;
 
       if (content === undefined) {
@@ -115,10 +74,41 @@ export class ChatView extends ItemView {
       return false;
     });
 
-    this.scope.register(["Ctrl", "Shift"], "n", () => {
+    scope.register(["Ctrl", "Shift"], "n", () => {
       this.#service.refresh();
 
       return false;
     });
+
+    // We only need to assign it to this.scope
+    // Obsidian will handle the lifecycle on view focus and unfocus
+    this.scope = scope;
+  }
+
+  #bindScrollKeys(scope: Scope) {
+    const keysToValue = new Map<[string, string], number>(
+      [
+        [["j", "k"], 0.1],
+        [["e", "y"], 0.3],
+        [["d", "u"], 0.5],
+        [["f", "b"], 1],
+      ],
+    );
+
+    for (const [keys, value] of keysToValue) {
+      scope.register(["Ctrl"], keys[0], () => {
+        // @ts-ignore
+        this.#component.scrollDown(value); // eslint-disable-line
+
+        return false;
+      });
+
+      scope.register(["Ctrl"], keys[1], () => {
+        // @ts-ignore
+        this.#component.scrollUp(value); // eslint-disable-line
+
+        return false;
+      });
+    }
   }
 }
